@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Lesson } from '@/hooks/useLessons';
 import { LessonPlanManager } from '@/components/lessons/LessonPlanManager';
+import { formatLessonContent } from '@/lib/sanitize';
 
 interface LessonViewProps {
   lesson: Lesson;
@@ -123,27 +124,9 @@ export const LessonView = ({ lesson }: LessonViewProps) => {
         <div
           className="prose-perplexity text-foreground leading-relaxed"
           dir="auto"
-          dangerouslySetInnerHTML={{ __html: formatContent(lesson.content) }}
+          dangerouslySetInnerHTML={{ __html: formatLessonContent(lesson.content) }}
         />
       </div>
     </div>
   );
 };
-
-function formatContent(content: string): string {
-  let html = content
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br/>');
-  
-  html = `<p>${html}</p>`;
-  html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
-  
-  return html;
-}
