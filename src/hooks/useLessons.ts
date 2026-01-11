@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Lesson {
   id: string;
@@ -12,6 +13,7 @@ export interface Lesson {
   citations: string[];
   images: string[];
   plan?: any; // LessonPlan structure (JSON)
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +22,10 @@ export const useLessons = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
+
+  const isRtl = language === 'ar';
 
   const fetchLessons = useCallback(async () => {
     try {
@@ -50,6 +55,15 @@ export const useLessons = () => {
     images: string[],
     plan?: any
   ) => {
+    if (!user) {
+      toast({
+        title: isRtl ? 'يرجى تسجيل الدخول' : 'Please sign in',
+        description: isRtl ? 'يجب تسجيل الدخول لحفظ الدروس' : 'You must be signed in to save lessons',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
     try {
       const { data, error } = await supabase
         .from('lessons')
@@ -60,6 +74,7 @@ export const useLessons = () => {
           citations,
           images,
           plan: plan || null,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -74,18 +89,27 @@ export const useLessons = () => {
     } catch (error) {
       console.error('Error saving lesson:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to save lesson',
+        title: isRtl ? 'خطأ' : 'Error',
+        description: isRtl ? 'فشل حفظ الدرس' : 'Failed to save lesson',
         variant: 'destructive',
       });
       return null;
     }
-  }, [toast, t]);
+  }, [toast, t, user, isRtl]);
 
   const updateLessonPlan = useCallback(async (
     lessonId: string,
     plan: any
   ) => {
+    if (!user) {
+      toast({
+        title: isRtl ? 'يرجى تسجيل الدخول' : 'Please sign in',
+        description: isRtl ? 'يجب تسجيل الدخول لتحديث الدروس' : 'You must be signed in to update lessons',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
     try {
       const { data, error } = await supabase
         .from('lessons')
@@ -98,21 +122,30 @@ export const useLessons = () => {
 
       setLessons(prev => prev.map(l => l.id === lessonId ? data : l));
       toast({
-        title: 'تم حفظ الخطة الدراسية',
+        title: isRtl ? 'تم حفظ الخطة الدراسية' : 'Lesson plan saved',
       });
       return data;
     } catch (error) {
       console.error('Error updating lesson plan:', error);
       toast({
-        title: 'خطأ',
-        description: 'فشل حفظ الخطة الدراسية',
+        title: isRtl ? 'خطأ' : 'Error',
+        description: isRtl ? 'فشل حفظ الخطة الدراسية' : 'Failed to save lesson plan',
         variant: 'destructive',
       });
       return null;
     }
-  }, [toast]);
+  }, [toast, user, isRtl]);
 
   const deleteLesson = useCallback(async (id: string) => {
+    if (!user) {
+      toast({
+        title: isRtl ? 'يرجى تسجيل الدخول' : 'Please sign in',
+        description: isRtl ? 'يجب تسجيل الدخول لحذف الدروس' : 'You must be signed in to delete lessons',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('lessons')
@@ -127,8 +160,13 @@ export const useLessons = () => {
       });
     } catch (error) {
       console.error('Error deleting lesson:', error);
+      toast({
+        title: isRtl ? 'خطأ' : 'Error',
+        description: isRtl ? 'فشل حذف الدرس' : 'Failed to delete lesson',
+        variant: 'destructive',
+      });
     }
-  }, [toast, t]);
+  }, [toast, t, user, isRtl]);
 
   return {
     lessons,
