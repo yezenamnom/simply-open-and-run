@@ -20,11 +20,13 @@ import {
   Zap,
   Upload,
   Image as ImageIcon,
-  X
+  X,
+  Workflow
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/search/SearchInput";
 import { SearchResult } from "@/components/search/SearchResult";
+import { WorkflowManager } from "@/components/lessons/WorkflowManager";
 
 interface ChatMessage {
   id: string;
@@ -271,6 +273,9 @@ export const UnifiedInterface = ({
             <BookOpen className="h-4 w-4" />
             <span>{lessonMode ? 'وضع الدرس' : 'بحث عام'}</span>
           </Button>
+
+          {/* Workflow Builder Button */}
+          <WorkflowManager />
 
           {/* Clear Chat */}
           <Button

@@ -15,9 +15,12 @@ import { usePerplexitySearch } from "@/hooks/usePerplexitySearch";
 import { useLessons, Lesson } from "@/hooks/useLessons";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useClaudeModelSelection } from "@/hooks/usePuter";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { LessonExport } from "@/components/lessons/LessonExport";
 import { LessonSummary } from "@/components/lessons/LessonSummary";
+import { WorkflowManager } from "@/components/lessons/WorkflowManager";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -29,6 +32,8 @@ const Index = () => {
   const [isThinkingDeeper, setIsThinkingDeeper] = useState(false);
   const [saveLessonOpen, setSaveLessonOpen] = useState(false);
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const { selectedModel } = useClaudeModelSelection();
   const {
     currentSearch,
     chatMessages,
@@ -42,7 +47,7 @@ const Index = () => {
     goHome,
     lessonMode,
     toggleLessonMode,
-  } = usePerplexitySearch();
+  } = usePerplexitySearch({ enabled: true, model: selectedModel });
 
   const { lessons, loading: lessonsLoading, saveLesson, deleteLesson } = useLessons();
   const { uploading, analyzing, uploadedImages, imagesWithAnalysis, uploadImage, removeImage, clearImages } = useImageUpload();
@@ -62,16 +67,40 @@ const Index = () => {
   };
 
   const handleSaveLesson = async (title: string) => {
-    if (currentSearch?.result?.content) {
-      await saveLesson(
-        title,
-        currentSearch.query,
+    if (!currentSearch?.result?.content) {
+      toast({
+        title: 'خطأ',
+        description: 'لا يوجد محتوى لحفظه. يرجى إجراء بحث أولاً',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!title || !title.trim()) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال عنوان للدرس',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const result = await saveLesson(
+        title.trim(),
+        currentSearch.query || '',
         currentSearch.result.content,
         currentSearch.result.citations || [],
         currentSearch.images || [],
         (currentSearch as any).plan || null
       );
-      clearImages();
+      
+      if (result) {
+        setSaveLessonOpen(false);
+        clearImages();
+      }
+    } catch (error) {
+      console.error('Error in handleSaveLesson:', error);
     }
   };
 
@@ -304,6 +333,9 @@ const Index = () => {
               <GraduationCap className="h-4 w-4" />
               {t.lessonMode}
             </Button>
+
+            {/* Workflow Builder Button */}
+            <WorkflowManager />
             
             {/* Discover Button */}
             <Button
