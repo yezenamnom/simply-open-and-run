@@ -49,19 +49,40 @@ export const analyzeImage = async (
  * تحليل الصورة من ملف مباشرة
  * @param file ملف الصورة
  * @param language لغة التحليل
+ * @param userId معرف المستخدم (اختياري)
  * @returns نتيجة التحليل
  */
 export const analyzeImageFile = async (
   file: File,
-  language: string = 'ar'
+  language: string = 'ar',
+  userId?: string
 ): Promise<ImageAnalysisResult> => {
   try {
-    // رفع الصورة أولاً
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `temp/${fileName}`;
+    // Get current user if userId not provided
+    const { data: { user } } = await supabase.auth.getUser();
+    const currentUserId = userId || user?.id;
+    
+    if (!currentUserId) {
+      return {
+        success: false,
+        error: 'User must be authenticated to analyze images',
+      };
+    }
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // رفع الصورة أولاً مع مسار يتضمن user.id للتوافق مع RLS
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const safeExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!fileExt || !safeExts.includes(fileExt)) {
+      return {
+        success: false,
+        error: 'Invalid file type',
+      };
+    }
+    
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${currentUserId}/temp/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
       .from('lesson-images')
       .upload(filePath, file);
 
@@ -72,13 +93,20 @@ export const analyzeImageFile = async (
       };
     }
 
-    // الحصول على رابط الصورة
-    const { data: { publicUrl } } = supabase.storage
+    // الحصول على رابط موقع للصورة
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from('lesson-images')
-      .getPublicUrl(filePath);
+      .createSignedUrl(filePath, 60 * 5); // 5 minutes expiry
+
+    if (signedUrlError) {
+      return {
+        success: false,
+        error: signedUrlError.message,
+      };
+    }
 
     // تحليل الصورة
-    const analysisResult = await analyzeImage(publicUrl, language);
+    const analysisResult = await analyzeImage(signedUrlData.signedUrl, language);
 
     // حذف الملف المؤقت
     await supabase.storage
