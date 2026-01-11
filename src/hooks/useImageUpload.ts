@@ -15,10 +15,43 @@ export const useImageUpload = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const { language } = useLanguage();
 
+  // File validation constants
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const validateFile = (file: File): { valid: boolean; error?: string } => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { 
+        valid: false, 
+        error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.' 
+      };
+    }
+    if (file.size > MAX_SIZE) {
+      return { 
+        valid: false, 
+        error: 'File too large. Maximum size is 5MB.' 
+      };
+    }
+    return { valid: true };
+  };
+
   const uploadImage = useCallback(async (file: File, analyze: boolean = true): Promise<string | null> => {
+    // Validate file before upload
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      console.error('File validation failed:', validation.error);
+      return null;
+    }
+
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      // Ensure safe file extension
+      const safeExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      if (!fileExt || !safeExts.includes(fileExt)) {
+        throw new Error('Invalid file extension');
+      }
+      
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 

@@ -14,6 +14,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface ChatMessage {
   id: string;
@@ -295,7 +296,7 @@ export const ContinuousChat = ({
                       <span>{message.content}</span>
                     </div>
                   ) : (
-                    <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(message.content) }} />
                   )}
                 </div>
               </div>

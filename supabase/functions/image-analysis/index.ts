@@ -14,17 +14,51 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, language = "ar" } = await req.json();
+    const body = await req.json();
+    const { imageUrl, language = "ar" } = body;
 
-    if (!imageUrl) {
+    // Validate imageUrl
+    if (!imageUrl || typeof imageUrl !== 'string') {
       return new Response(
-        JSON.stringify({ success: false, error: "Image URL is required" }),
+        JSON.stringify({ success: false, error: "Image URL is required and must be a string" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
         }
       );
     }
+
+    // Validate URL format
+    try {
+      const url = new URL(imageUrl);
+      // Only allow https URLs for security
+      if (url.protocol !== 'https:') {
+        throw new Error('Only HTTPS URLs are allowed');
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid URL format. Must be a valid HTTPS URL." }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    // Validate URL length
+    if (imageUrl.length > 2000) {
+      return new Response(
+        JSON.stringify({ success: false, error: "URL too long. Maximum 2000 characters." }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    // Validate language
+    const validLanguages = ['ar', 'en', 'de'];
+    const safeLanguage = validLanguages.includes(language) ? language : 'ar';
 
     // استدعاء Perplexity API لتحليل الصورة
     // يمكن استخدام Vision API أو Perplexity مع دعم الصور
@@ -44,9 +78,9 @@ serve(async (req) => {
     }
 
     // تحليل الصورة باستخدام Perplexity
-    const prompt = language === "ar" 
+    const prompt = safeLanguage === "ar" 
       ? "حلل هذه الصورة وصف ما تراه بالتفصيل. ما هي العناصر الرئيسية؟ ما هو السياق؟"
-      : language === "de"
+      : safeLanguage === "de"
       ? "Analysiere dieses Bild und beschreibe, was du siehst. Was sind die Hauptelemente? Was ist der Kontext?"
       : "Analyze this image and describe what you see in detail. What are the main elements? What is the context?";
 
@@ -91,7 +125,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         description,
-        language,
+        language: safeLanguage,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Image as ImageIcon } from 'lucide-react';
 import { SourcesPopup } from "./SourcesPopup";
 import { ThinkDeeperButton } from "../ThinkDeeperButton";
+import { formatContent } from "@/lib/sanitize";
 
 interface SearchResultProps {
   query: string;
@@ -128,55 +129,3 @@ export const SearchResult = ({ query, content, citations, isLoading, images = []
     </div>
   );
 };
-
-function formatContent(content: string): string {
-  // Convert markdown-like formatting to HTML with enhanced table support
-  let html = content
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mb-3 mt-4 text-foreground">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mb-4 mt-6 text-foreground">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mb-5 mt-8 text-foreground">$1</h1>')
-    // Bold
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
-    // Italic
-    .replace(/\*(.+?)\*/g, '<em class="italic text-foreground">$1</em>')
-    // Tables - Enhanced support
-    .replace(/\|(.+)\|/g, (match, content) => {
-      const cells = content.split('|').map(cell => cell.trim());
-      const isHeader = match.includes('---') || cells.some(cell => cell.includes('**'));
-      
-      if (isHeader) {
-        const headerCells = cells.map(cell => 
-          `<th class="px-4 py-3 text-right font-semibold text-sm bg-muted/50 border border-border">${cell.replace(/\*\*/g, '')}</th>`
-        ).join('');
-        return `<table class="w-full border-collapse border border-border rounded-lg overflow-hidden mb-6 shadow-sm"><thead><tr>${headerCells}</tr></thead><tbody>`;
-      }
-      
-      const dataCells = cells.map(cell => 
-        `<td class="px-4 py-3 text-right text-sm border border-border bg-card">${cell}</td>`
-      ).join('');
-      return `<tr class="hover:bg-muted/30 transition-colors">${dataCells}</tr>`;
-    })
-    // Close table tags
-    .replace(/<tbody><tr>/g, '</tbody><tbody><tr>')
-    .replace(/<tbody>$/, '</tbody></table>')
-    // Lists
-    .replace(/^- (.+)$/gm, '<li class="mb-2 flex items-start"><span class="text-primary mr-2">•</span><span>$1</span></li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li class="mb-2 flex items-start"><span class="text-primary mr-2 font-semibold">$1.</span><span>$2</span></li>')
-    // Line breaks
-    .replace(/\n\n/g, '</p><p class="mb-4">')
-    .replace(/\n/g, '<br/>');
-  
-  // Wrap in paragraph
-  html = `<p class="text-foreground leading-relaxed mb-4">${html}</p>`;
-  
-  // Fix list items
-  html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul class="space-y-2 mb-4">${match}</ul>`);
-  
-  // Clean up table structure
-  html = html.replace(/<table>.*?<\/table>/gs, (match) => {
-    return match.replace(/<p class="text-foreground leading-relaxed mb-4">/g, '').replace(/<\/p>/g, '');
-  });
-  
-  return html;
-}
