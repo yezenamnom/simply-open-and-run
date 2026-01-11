@@ -28,6 +28,13 @@ export const useLessons = () => {
   const isRtl = language === 'ar';
 
   const fetchLessons = useCallback(async () => {
+    // Only fetch lessons if user is authenticated (RLS requires auth)
+    if (!user) {
+      setLessons([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('lessons')
@@ -38,10 +45,11 @@ export const useLessons = () => {
       setLessons(data || []);
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      setLessons([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchLessons();
