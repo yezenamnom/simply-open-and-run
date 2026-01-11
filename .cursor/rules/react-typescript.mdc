@@ -1,0 +1,131 @@
+---
+description: معايير كود React و TypeScript للمشروع
+globs:
+  - src/**/*.tsx
+  - src/**/*.ts
+alwaysApply: true
+priority: 100
+---
+
+# معايير React و TypeScript
+
+## React Components
+
+### Functional Components Only
+- استخدم functional components فقط
+- لا تستخدم class components
+
+### Hooks
+- استخدم `useState` للـ state المحلي
+- استخدم `useEffect` مع cleanup functions عند الحاجة
+- استخدم `useMemo` و `useCallback` للتحسين (فقط عند الحاجة)
+- استخدم custom hooks للمنطق المعاد استخدامه
+
+### Props
+- استخدم TypeScript interfaces لجميع props
+- استخدم named exports
+- استخدم default props عند الحاجة
+
+```typescript
+// ✅ Good
+interface ButtonProps {
+  label: string;
+  onClick: () => void;
+  variant?: 'primary' | 'secondary';
+}
+
+export const Button = ({ label, onClick, variant = 'primary' }: ButtonProps) => {
+  // ...
+};
+
+// ❌ Bad
+export const Button = (props: any) => {
+  // ...
+};
+```
+
+## TypeScript
+
+### Types
+- تجنب `any` - استخدم `unknown` أو types محددة
+- استخدم `type` للـ unions و intersections
+- استخدم `interface` للـ objects و components props
+
+### Strict Mode
+- استخدم strict mode دائماً
+- أضف type annotations للدوال العامة
+
+```typescript
+// ✅ Good
+const handleClick = (id: string): void => {
+  // ...
+};
+
+// ❌ Bad
+const handleClick = (id) => {
+  // ...
+};
+```
+
+## State Management
+
+### Local State
+- استخدم `useState` للـ state البسيط
+- استخدم Context API للـ state المشترك (مثل LanguageContext)
+
+### Server State
+- استخدم `@tanstack/react-query` للـ server state
+- استخدم custom hooks (مثل `usePerplexitySearch`)
+
+## Styling
+
+### Tailwind CSS
+- استخدم Tailwind utility classes
+- استخدم `cn()` من `@/lib/utils` لدمج classes
+- استخدم CSS variables للثيمات
+
+```typescript
+// ✅ Good
+<div className={cn(
+  "base-classes",
+  condition && "conditional-classes",
+  className
+)}>
+
+// ❌ Bad
+<div className={`base-classes ${condition ? 'conditional' : ''}`}>
+```
+
+## File Structure
+
+### Naming
+- Components: PascalCase (`SearchInput.tsx`)
+- Hooks: camelCase with `use` prefix (`usePerplexitySearch.ts`)
+- Utils: camelCase (`utils.ts`)
+
+### Imports
+- استخدم absolute imports (`@/components/...`)
+- رتب imports: external → internal → relative
+
+```typescript
+// ✅ Good
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { cn } from "@/lib/utils";
+
+// ❌ Bad
+import { Button } from "../../components/ui/button";
+```
+
+## Error Handling
+
+- استخدم try-catch للعمليات async
+- أضف error boundaries للـ components الحرجة
+- اعرض رسائل خطأ واضحة للمستخدم
+
+## Performance
+
+- استخدم `React.memo` فقط عند الحاجة (components كبيرة)
+- استخدم `useMemo` و `useCallback` بحذر (لا تفرط)
+- تجنب re-renders غير ضرورية

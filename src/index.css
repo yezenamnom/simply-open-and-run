@@ -1,0 +1,291 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 15%;
+
+    --primary: 220 85% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 96%;
+    --secondary-foreground: 220 15% 25%;
+
+    --muted: 220 15% 96%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 220 85% 96%;
+    --accent-foreground: 220 85% 45%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 220 85% 55%;
+
+    --radius: 0.75rem;
+
+    --search-bg: 220 15% 97%;
+    --search-border: 220 15% 88%;
+    --source-bg: 220 85% 97%;
+    --source-border: 220 85% 90%;
+    --source-text: 220 85% 45%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 220 15% 95%;
+
+    --card: 220 20% 13%;
+    --card-foreground: 220 15% 95%;
+
+    --popover: 220 20% 13%;
+    --popover-foreground: 220 15% 95%;
+
+    --primary: 220 85% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 220 15% 85%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 220 85% 20%;
+    --accent-foreground: 220 85% 75%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 220 85% 60%;
+
+    --search-bg: 220 20% 15%;
+    --search-border: 220 20% 25%;
+    --source-bg: 220 85% 15%;
+    --source-border: 220 85% 25%;
+    --source-text: 220 85% 70%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 3px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px hsl(var(--primary) / 0.2);
+  }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.typing-dot {
+  animation: typing-dot 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Enhanced Markdown styles */
+.prose-perplexity h1 {
+  @apply text-2xl font-bold mb-5 mt-8 text-foreground;
+}
+
+.prose-perplexity h2 {
+  @apply text-xl font-bold mb-4 mt-6 text-foreground;
+}
+
+.prose-perplexity h3 {
+  @apply text-lg font-semibold mb-3 mt-4 text-foreground;
+}
+
+.prose-perplexity p {
+  @apply mb-4 leading-relaxed text-foreground;
+}
+
+.prose-perplexity ul {
+  @apply list-none mb-4 space-y-2;
+}
+
+.prose-perplexity ol {
+  @apply list-none mb-4 space-y-2;
+}
+
+.prose-perplexity li {
+  @apply leading-relaxed text-foreground;
+}
+
+.prose-perplexity strong {
+  @apply font-semibold text-foreground;
+}
+
+.prose-perplexity a {
+  @apply text-primary hover:underline;
+}
+
+.prose-perplexity code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm text-foreground;
+}
+
+.prose-perplexity pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.prose-perplexity blockquote {
+  @apply border-l-4 border-primary/30 pl-4 italic text-muted-foreground my-4;
+}
+
+/* Enhanced Table Styles */
+.prose-perplexity table {
+  @apply w-full border-collapse border border-border rounded-lg overflow-hidden mb-6 shadow-sm;
+}
+
+.prose-perplexity thead {
+  @apply bg-muted/50;
+}
+
+.prose-perplexity th {
+  @apply px-4 py-3 text-right font-semibold text-sm border border-border text-foreground;
+}
+
+.prose-perplexity td {
+  @apply px-4 py-3 text-right text-sm border border-border bg-card text-foreground;
+}
+
+.prose-perplexity tr {
+  @apply hover:bg-muted/30 transition-colors;
+}
+
+.prose-perplexity tr:nth-child(even) {
+  @apply bg-muted/20;
+}
+
+/* RTL Support for tables */
+.prose-perplexity table[dir="rtl"] th,
+.prose-perplexity table[dir="rtl"] td {
+  @apply text-right;
+}
+
+.prose-perplexity table[dir="ltr"] th,
+.prose-perplexity table[dir="ltr"] td {
+  @apply text-left;
+}
+
+/* Dark mode table enhancements */
+.dark .prose-perplexity table {
+  @apply border-border;
+}
+
+.dark .prose-perplexity thead {
+  @apply bg-muted/30;
+}
+
+.dark .prose-perplexity th {
+  @apply bg-muted/20 border-border;
+}
+
+.dark .prose-perplexity td {
+  @apply bg-card border-border;
+}
+
+.dark .prose-perplexity tr:hover {
+  @apply bg-muted/20;
+}
+
+.dark .prose-perplexity tr:nth-child(even) {
+  @apply bg-muted/10;
+}
