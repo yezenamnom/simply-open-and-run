@@ -126,6 +126,13 @@ export const LessonExport = ({
     }
   };
 
+  // Escape HTML to prevent XSS attacks
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
   const generatePDFContent = (lessonsData: Lesson[]): string => {
     let html = `
       <!DOCTYPE html>
@@ -137,7 +144,7 @@ export const LessonExport = ({
           body { font-family: Arial, sans-serif; padding: 20px; direction: rtl; }
           .lesson { margin-bottom: 40px; page-break-inside: avoid; }
           .lesson-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1a1a1a; }
-          .lesson-content { line-height: 1.8; color: #333; }
+          .lesson-content { line-height: 1.8; color: #333; white-space: pre-wrap; }
           .lesson-meta { color: #666; font-size: 14px; margin-bottom: 15px; }
           .citations { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }
           .citation { margin: 5px 0; color: #0066cc; }
@@ -153,17 +160,17 @@ export const LessonExport = ({
     lessonsData.forEach((lesson, index) => {
       html += `
         <div class="lesson">
-          <div class="lesson-title">${index + 1}. ${lesson.title}</div>
+          <div class="lesson-title">${index + 1}. ${escapeHtml(lesson.title)}</div>
           <div class="lesson-meta">
-            السؤال: ${lesson.query}<br>
+            السؤال: ${escapeHtml(lesson.query)}<br>
             تاريخ الإنشاء: ${new Date(lesson.created_at).toLocaleDateString('ar-SA')}
           </div>
-          <div class="lesson-content">${lesson.content}</div>
+          <div class="lesson-content">${escapeHtml(lesson.content)}</div>
           ${lesson.citations.length > 0 ? `
             <div class="citations">
               <strong>المصادر:</strong>
               ${lesson.citations.map((cite, i) => 
-                `<div class="citation">${i + 1}. ${cite}</div>`
+                `<div class="citation">${i + 1}. ${escapeHtml(cite)}</div>`
               ).join('')}
             </div>
           ` : ''}

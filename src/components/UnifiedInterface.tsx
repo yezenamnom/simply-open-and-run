@@ -26,7 +26,11 @@ import {
 import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/search/SearchInput";
 import { SearchResult } from "@/components/search/SearchResult";
+<<<<<<< HEAD
 import { WorkflowManager } from "@/components/lessons/WorkflowManager";
+=======
+import { sanitizeHtml } from "@/lib/sanitize";
+>>>>>>> fccdaed98097d6beccc152ee27ba94363b7828a0
 
 interface ChatMessage {
   id: string;
@@ -395,7 +399,7 @@ export const UnifiedInterface = ({
                       <span>{message.content}</span>
                     </div>
                   ) : (
-                    <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(message.content) }} />
                   )}
                 </div>
 

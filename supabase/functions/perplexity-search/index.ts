@@ -295,14 +295,35 @@ serve(async (req) => {
   }
 
   try {
-    const { query, searchType, language = 'en' } = await req.json();
+    const body = await req.json();
+    
+    // Input validation
+    const { query, searchType, language = 'en' } = body;
 
-    if (!query) {
+    // Validate query
+    if (!query || typeof query !== 'string') {
       return new Response(
-        JSON.stringify({ success: false, error: 'Query is required' }),
+        JSON.stringify({ success: false, error: 'Query is required and must be a string' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Validate query length (prevent abuse)
+    const MAX_QUERY_LENGTH = 5000;
+    if (query.length > MAX_QUERY_LENGTH) {
+      return new Response(
+        JSON.stringify({ success: false, error: `Query too long. Maximum ${MAX_QUERY_LENGTH} characters.` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate searchType
+    const validSearchTypes = ['general', 'news', 'smart', 'discover', 'discover-images', 'lesson'];
+    const safeSearchType = validSearchTypes.includes(searchType) ? searchType : 'general';
+
+    // Validate language
+    const validLanguages = ['ar', 'en', 'de'];
+    const safeLanguage = validLanguages.includes(language) ? language : 'en';
 
     // Check if this is a simple conversational message
     if (!needsWebSearch(query)) {
@@ -310,7 +331,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          content: getConversationalResponse(query, language),
+          content: getConversationalResponse(query, safeLanguage),
           citations: [],
           model: 'conversational',
           isConversational: true,
@@ -324,8 +345,8 @@ serve(async (req) => {
       console.log('PERPLEXITY_API_KEY not configured, returning mock data');
       
       // Return mock news data for discover functionality
-      if (searchType === 'discover' || searchType === 'discover-images') {
-        const mockNews = getMockNews(language);
+      if (safeSearchType === 'discover' || safeSearchType === 'discover-images') {
+        const mockNews = getMockNews(safeLanguage);
         return new Response(
           JSON.stringify({
             success: true,
@@ -344,7 +365,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Searching with Perplexity:', query, 'Type:', searchType, 'Lang:', language);
+    console.log('Searching with Perplexity:', query.substring(0, 100), 'Type:', safeSearchType, 'Lang:', safeLanguage);
 
     // Language-specific system prompts
     const systemPrompts: Record<string, Record<string, string>> = {
@@ -380,8 +401,7 @@ serve(async (req) => {
       },
     };
 
-    const type = searchType || 'general';
-    const systemPrompt = systemPrompts[type]?.[language] || systemPrompts.general.en;
+    const systemPrompt = systemPrompts[safeSearchType]?.[safeLanguage] || systemPrompts.general.en;
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -395,7 +415,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: query }
         ],
-        search_recency_filter: (type === 'news' || type === 'discover' || type === 'discover-images') ? 'day' : undefined,
+        search_recency_filter: (safeSearchType === 'news' || safeSearchType === 'discover' || safeSearchType === 'discover-images') ? 'day' : undefined,
       }),
     });
 

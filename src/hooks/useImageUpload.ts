@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { analyzeImageFile, ImageAnalysisResult } from '@/lib/api/imageAnalysis';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ImageWithAnalysis {
   url: string;
@@ -14,13 +15,54 @@ export const useImageUpload = () => {
   const [imagesWithAnalysis, setImagesWithAnalysis] = useState<ImageWithAnalysis[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const { language } = useLanguage();
+  const { user } = useAuth();
+
+  // File validation constants
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const validateFile = (file: File): { valid: boolean; error?: string } => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { 
+        valid: false, 
+        error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.' 
+      };
+    }
+    if (file.size > MAX_SIZE) {
+      return { 
+        valid: false, 
+        error: 'File too large. Maximum size is 5MB.' 
+      };
+    }
+    return { valid: true };
+  };
 
   const uploadImage = useCallback(async (file: File, analyze: boolean = true): Promise<string | null> => {
+    // Check authentication first
+    if (!user) {
+      console.error('User must be authenticated to upload images');
+      return null;
+    }
+
+    // Validate file before upload
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      console.error('File validation failed:', validation.error);
+      return null;
+    }
+
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      // Ensure safe file extension
+      const safeExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      if (!fileExt || !safeExts.includes(fileExt)) {
+        throw new Error('Invalid file extension');
+      }
+      
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `uploads/${fileName}`;
+      // Use user.id as folder for RLS policy compliance
+      const filePath = `${user.id}/uploads/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('lesson-images')
@@ -28,11 +70,14 @@ export const useImageUpload = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
+      // Get signed URL for private bucket
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('lesson-images')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 60 * 60 * 24 * 7); // 7 days expiry
 
-      const url = data.publicUrl;
+      if (signedUrlError) throw signedUrlError;
+
+      const url = signedUrlData.signedUrl;
       setUploadedImages(prev => [...prev, url]);
 
       // تحليل الصورة بالذكاء الاصطناعي

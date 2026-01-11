@@ -11,6 +11,7 @@ import { LessonView } from "@/components/search/LessonView";
 import { SaveLessonDialog } from "@/components/search/SaveLessonDialog";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { UserMenu } from "@/components/auth/UserMenu";
 import { usePerplexitySearch } from "@/hooks/usePerplexitySearch";
 import { useLessons, Lesson } from "@/hooks/useLessons";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -348,6 +349,7 @@ const Index = () => {
               {t.discover}
             </Button>
             
+            <UserMenu />
             <LanguageSwitcher />
             <DarkModeToggle />
             <Button variant="ghost" size="icon" onClick={handleGoHome}>

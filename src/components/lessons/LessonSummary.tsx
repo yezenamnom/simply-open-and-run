@@ -8,6 +8,7 @@ import { Lesson } from '@/hooks/useLessons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { perplexityApi } from '@/lib/api/perplexity';
+import { formatSummaryContent } from '@/lib/sanitize';
 
 interface LessonSummaryProps {
   lessons: Lesson[];
@@ -209,7 +210,7 @@ Present the summary in an organized and professional manner with headings and nu
               </div>
               <div
                 className="prose prose-sm max-w-none text-foreground"
-                dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }}
+                dangerouslySetInnerHTML={{ __html: formatSummaryContent(summary) }}
               />
               <Button
                 variant="outline"
